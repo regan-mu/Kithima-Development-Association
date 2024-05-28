@@ -141,12 +141,11 @@ AUTH_USER_MODEL = "api.User"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-#     "https://kithima-development-client.vercel.app"
-# ]
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://kithima-development-client.vercel.app"
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -159,7 +158,8 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     'token',
-    "kithima-development-association.onrender.com"
+    "kithima-development-association.onrender.com",
+    "cookies"
 ]
 CORS_ALLOW_METHODS = (
     "DELETE",
