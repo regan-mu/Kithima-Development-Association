@@ -40,7 +40,14 @@ class UserLoginAPIView(APIView):
         token = jwt.encode(payload, os.getenv("DJANGO_SECRET"), algorithm="HS256")
 
         response = Response()
-        response.set_cookie(key="jwt", value=token, httponly=True)
+        response.set_cookie(
+            key="jwt",
+            value=token,
+            httponly=True,
+            secure=False,
+            samesite='Lax',
+            max_age=3600,
+        )
 
         response.data = {"token": token}
         return response
@@ -84,14 +91,13 @@ class RetrieveMemberAPIView(APIView):
     """Retrieve Member"""
 
     def get_object(self, member_number):
-        try:
-            member = Member.objects.filter(member_number=member_number).first()
-            return member
-        except Member.DoesNotExist:
-            raise NotFound("Member not found")
+        member = Member.objects.filter(member_number=member_number).first()
+        return member
 
     def get(self, request, member_number):
         member = self.get_object(member_number)
+        if member is None:
+            return Response({"message": "Member not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = MemberSerializer(member)
         return Response(serializer.data)
 
@@ -113,12 +119,11 @@ class RetrieveEventAPIView(generics.RetrieveAPIView):
 class ListCreateContributionAPIView(generics.ListCreateAPIView):
     """List and Add Contribution"""
 
-    # queryset = Contribution.objects.all()
-    # serializer_class = ContributionSerializer
+    queryset = Contribution.objects.all()
+    serializer_class = ContributionSerializer
 
     def post(self, request, *args, **kwargs):
-        token = request.COOKIES.get("jwt")
-
+        token = request.headers.get("Token")
         if not token:
             raise AuthenticationFailed("User not Authenticated")
         try:
@@ -136,10 +141,14 @@ class ListCreateContributionAPIView(generics.ListCreateAPIView):
         if event is None:
             raise NotFound("Event not found")
 
+        contribution = Contribution.objects.filter(event=data["event_id"], member=data["member_id"]).first()
+        if contribution is not None:
+            return Response("Member has already contributed for this event", status=status.HTTP_400_BAD_REQUEST)
+
         contribution_data = {
-            "event": data["event_id"],
-            "member": MemberSerializer(member).data,
-            "amount": data["amount"]
+            "event": event.id,
+            "member": member.id,
+            "amount": data.get("amount")
         }
 
         serializer = ContributionSerializer(data=contribution_data)
@@ -147,4 +156,3 @@ class ListCreateContributionAPIView(generics.ListCreateAPIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

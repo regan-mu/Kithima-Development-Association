@@ -24,29 +24,25 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class MemberSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Member
-        fields = ["id", "first_name", "last_name", "member_number", "mobile_number", "join_date"]
-
-
 class ContributionSerializer(serializers.ModelSerializer):
-    member = MemberSerializer()
 
-    # def create(self, validated_data):
-    #     member_data = validated_data.pop("member", None)
-    #     member_instance = None
-    #     if member_data:
-    #         member_instance, _ = Member.objects.get_or_create(**member_data)
-    #
-    #     contribution = Contribution.objects.create(member=member_instance, **validated_data)
-    #
-    #     return contribution
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['event'] = instance.event.title
+        representation['member'] = f"{instance.member.first_name} {instance.member.last_name}"
+        return representation
 
     class Meta:
         model = Contribution
         fields = ["id", "event", "member", "amount", "created_at"]
+
+
+class MemberSerializer(serializers.ModelSerializer):
+    contributions = ContributionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Member
+        fields = ["id", "first_name", "last_name", "member_number", "mobile_number", "join_date", "contributions"]
 
 
 class EventSerializer(serializers.ModelSerializer):
