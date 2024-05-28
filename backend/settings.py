@@ -144,5 +144,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'Content-Type',
-    'token'
+    'token',
+    "kithima-development-association.onrender.com"
 ]
